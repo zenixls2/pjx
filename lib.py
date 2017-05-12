@@ -3,8 +3,6 @@ from yattag import Doc, indent
 import json
 import inspect
 
-doc, _, text, line = Doc().ttl()
-
 class FuncObj(str):
     def __new__(cls, func, *args, **kwargs):
         name = func.__name__ + '()'
@@ -35,63 +33,55 @@ def domfy(klass):
         return value
     return wrapper
 
-class Html(str):
+class Container(str):
     var = {}
     local = {}
     def __new__(cls, *args, **kwargs):
-        t = _Html.__new__(cls, *args, **kwargs)
+        t = str.__new__(cls, *args, **kwargs)
         obj = str.__new__(cls, t.__str__())
         return obj
-    def header(self):
-        pass
-    def body(self):
+    def render(self, doc, _, text, line):
         pass
     def __str__(self):
+        doc, _, text, line = Doc().ttl()
         hold = {}
-        for k, v in self.var.items():
-            hold[k] = globals().get(k, None)
-            globals()[k] = v
-        for k, v in self.local.items():
-            hold[k] = globals().get(k, None)
-            globals()[k] = v
-        with _('html'):
-            with _('header'):
-                with _('script'):
-                    for k, v in self.var.items():
-                        doc.asis('var ' + k + ' = ' + json.dumps(v) + ';')
-                    for k, v in self.local.items():
-                        v.add(doc)
-                self.header()
-            with _('body'):
-                self.body()
+        if len(self.var) + len(self.local) > 0:
+            with _('script'):
+                for k, v in self.var.items():
+                    doc.asis('var ' + k + ' = ' + json.dumps(v) + ';')
+                for k, v in self.local.items():
+                    v.add(doc)
+        self.render(doc, _, text, line)
         result = doc.getvalue()
         for k, v in hold.items():
             globals()[k] = v
         return result
 
-class _Html(str):
-    def header(self):
+class Html(str):
+    var = {}
+    local = {}
+    def __new__(cls, *args, **kwargs):
+        t = str.__new__(cls, *args, **kwargs)
+        obj = str.__new__(cls, t.__str__())
+        return obj
+    def header(self, doc, _, text, line):
         pass
-    def body(self):
+    def body(self, doc, _, text, line):
         pass
     def __str__(self):
         hold = {}
-        for k, v in self.var.items():
-            hold[k] = globals().get(k, None)
-            globals()[k] = v
-        for k, v in self.local.items():
-            hold[k] = globals().get(k, None)
-            globals()[k] = v
+        doc, _, text, line = Doc().ttl()
         with _('html'):
             with _('header'):
-                with _('script'):
-                    for k, v in self.var.items():
-                        doc.asis('var ' + k + ' = ' + json.dumps(v) + ';')
-                    for k, v in self.local.items():
-                        v.add(doc)
-                self.header()
+                if len(self.var) + len(self.local) > 0:
+                    with _('script'):
+                        for k, v in self.var.items():
+                            doc.asis('var ' + k + ' = ' + json.dumps(v) + ';')
+                        for k, v in self.local.items():
+                            v.add(doc)
+                self.header(doc, _, text, line)
             with _('body'):
-                self.body()
+                self.body(doc, _, text, line)
         result = doc.getvalue()
         for k, v in hold.items():
             globals()[k] = v

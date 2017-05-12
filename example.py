@@ -1,5 +1,5 @@
-from yattag import Doc, indent
-from lib import Html, jsfy, domfy, doc, _, text, line
+from yattag import indent
+from lib import Html, Container, jsfy, domfy
 
 class MyHtml(Html):
     pass
@@ -9,14 +9,17 @@ def ohoh(doc, tag, text, line):
     with tag('div'):
         text("ohoh")
 
+class MyContainer(Container):
+    def render(self, doc, _, text, line):
+        with _('div'):
+            text('ohoh')
+
 @jsfy(MyHtml)
 def click_handler(event):
     document.getElementById('xdd').innerHTML = ohoh
 
 class MyHtml(Html):
-    def __str__(self):
-        return super().__str__()
-    def body(self):
+    def body(self, doc, _, text, line):
         line('h3', 'Hello World!')
         with _('form', action=""):
             doc.input(name='name', type='text', onkeypress=click_handler)
@@ -24,6 +27,7 @@ class MyHtml(Html):
             with _('div', id='xdd'):
                 text('xddd')
             doc.asis(ohoh)
+            doc.asis(MyContainer())
             doc.textarea(name='msg')
             doc.stag('input', type='submit', value='Leave comments...')
 
